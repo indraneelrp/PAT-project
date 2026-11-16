@@ -7,7 +7,7 @@ A simulation of a **Pointing, Acquisition and Tracking (PAT)** subsystem impleme
 ## Features
 
 - Simulated platform vibration, noisy IMU and camera, and finite-speed FSM response.
-- High-rate IMU prediction and low-rate camera correction.
+- High-rate IMU prediction and low-rate camera reading capture-- accounted for in the estimator.
 - Kalman correction based on the capture timestamp (as opposed to correction at the time of publishing) 
 - Closed-loop FSM command and position feedback.
 - Supervisory states: `DISABLED`, `FINE_LOCK`, `TRACK` -- a basic finite state machine that would be expanded on in a full implementation.
