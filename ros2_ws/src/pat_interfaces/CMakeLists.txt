@@ -6,12 +6,12 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/CameraObservation.msg"
-  "msg/ActuatorFeedback.msg"
-  "msg/ActuatorCommand.msg"
-  "msg/TrackingState.msg"
-  "msg/SimulationTruth.msg"
-  "srv/SetMode.srv"
+  "msg/PatImu.msg"
+  "msg/PatCamera.msg"
+  "msg/PatEstimate.msg"
+  "msg/PatFsmCommand.msg"
+  "msg/PatFsmState.msg"
+  "msg/PatTruth.msg"
   DEPENDENCIES builtin_interfaces
 )
 

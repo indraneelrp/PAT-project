@@ -49,7 +49,7 @@ class KalmanEstimator1D:
     def update_camera(self, measured_error):
         ## -- Camera measurement --
         z = np.array([measured_error])
-        
+
         ## -- Kalman gain --
         # P @ H.T @ [inv( H @P @H.T + R )]     <- H is just a selector matrix.
         # Equation arises from setting the values of K that will minimise 
@@ -98,3 +98,100 @@ class KalmanEstimator2D:
             self.x_axis.x[1],
             self.y_axis.x[1]
         )
+
+
+class DelayAwareKalmanEstimator2D:
+    def __init__(self, history_capacity=300):
+        self.kf = KalmanEstimator2D()
+        self.tick = 0
+        self.history_capacity = history_capacity
+        self.last_camera_tick = -1
+
+        # Store initial state at tick 0
+        self.history = [self._snapshot(0, 0, 0, 0)]
+
+    def _snapshot(self, tick, dt, gyro_x, gyro_y):
+        return {
+            "tick": tick,
+            "dt": dt,
+            "gyro_x": gyro_x,
+            "gyro_y": gyro_y,
+
+            # Save copies, not references!
+            "x": self.kf.x_axis.x.copy(),
+            "Px": self.kf.x_axis.P.copy(),
+            "y": self.kf.y_axis.x.copy(),
+            "Py": self.kf.y_axis.P.copy(),
+        }
+
+    def _restore(self, snapshot):
+        self.kf.x_axis.x = snapshot["x"].copy()
+        self.kf.x_axis.P = snapshot["Px"].copy()
+        self.kf.y_axis.x = snapshot["y"].copy()
+        self.kf.y_axis.P = snapshot["Py"].copy()
+
+    def predict(self, dt, gyro_x, gyro_y):
+        self.kf.predict(dt, gyro_x, gyro_y)
+
+        self.tick += 1
+
+        self.history.append(
+            self._snapshot(self.tick, dt, gyro_x, gyro_y)
+        )
+
+        # Keep memory bounded
+        if len(self.history) > self.history_capacity:
+            self.history.pop(0)
+
+    def update_camera_at(self, capture_tick, measured_x, measured_y):
+        # This simplified version requires a retained IMU tick.
+        # Camera captures must also arrive in capture-time order.
+        if capture_tick <= self.last_camera_tick:
+            raise ValueError("Out-of-order camera capture")
+
+        index = next(
+            (i for i, s in enumerate(self.history)
+             if s["tick"] == capture_tick),
+            None
+        )
+
+        if index is None:
+            raise ValueError("Camera capture outside stored history")
+
+        # 1. Restore estimator at image capture time
+        self._restore(self.history[index])
+
+        # 2. Correct that historical state
+        self.kf.update_camera(measured_x, measured_y)
+
+        # 3. Save corrected historical state
+        original = self.history[index]
+        self.history[index] = self._snapshot(
+            original["tick"],
+            original["dt"],
+            original["gyro_x"],
+            original["gyro_y"],
+        )
+
+        # 4. Replay all subsequent IMU predictions
+        for j in range(index + 1, len(self.history)):
+            old = self.history[j]
+
+            self.kf.predict(
+                old["dt"],
+                old["gyro_x"],
+                old["gyro_y"],
+            )
+
+            self.history[j] = self._snapshot(
+                old["tick"],
+                old["dt"],
+                old["gyro_x"],
+                old["gyro_y"],
+            )
+
+        self.last_camera_tick = capture_tick
+
+    @property
+    def angle(self):
+        return self.kf.angle
