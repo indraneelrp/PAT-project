@@ -1,4 +1,4 @@
-# ROS 2 Laser PAT — Fine Pointing and Tracking
+# ROS 2 Pointing, Acquisition and Tracking simulation — Fine Pointing and Tracking
 
 A simulation of a **Pointing, Acquisition and Tracking (PAT)** subsystem implemented with ROS 2 Jazzy and Python. It demonstrates **fine pointing lock** and **tracking** using an IMU, a slower delayed camera, a delay-aware Kalman filter, and a simulated fast steering mirror (FSM).
 
