@@ -94,7 +94,7 @@ A base ROS image may not include `colcon`, interface generators, `numpy`, or pyt
 **Option B — native Ubuntu 24.04.** Install and source ROS 2 Jazzy using the official ROS instructions; replace `/workspace/ros2_ws` in the commands below with the absolute path to your cloned `ros2_ws`.
 
 cd to PAT-project root
-` docker compose build`
+` docker compose build` \n
 `docker compose run --rm ros2 bash`
 
 ### 3. Build the ROS workspace
